@@ -1,6 +1,6 @@
 ﻿namespace CyanideAndHappinessBotWorker.Configuration;
 
-internal class BotSettings
+public class BotSettings
 {
     public string PageId { get; set; }
 

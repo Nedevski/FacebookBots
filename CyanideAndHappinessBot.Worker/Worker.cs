@@ -1,5 +1,6 @@
 using CyanideAndHappinessBotWorker.Configuration;
 using CyanideAndHappinessBotWorker.Services;
+using Microsoft.Extensions.Options;
 using NCrontab;
 
 namespace CyanideAndHappinessBotWorker;
@@ -14,11 +15,9 @@ public class Worker : BackgroundService
 
     private FbUploader _fbUploader;
 
-    public Worker(ILogger<Worker> logger, IConfiguration configuration, FbUploader fbUploader)
+    public Worker(ILogger<Worker> logger, IOptions<BotSettings> botSettings, FbUploader fbUploader)
     {
-        // Injecting IConfiguration directly to allow updating appsettings.json
-        // while the service is running
-        _botSettings = configuration.GetSection(nameof(BotSettings)).Get<BotSettings>();
+        _botSettings = botSettings.Value;
         _logger = logger;
 
         _schedule = CrontabSchedule.Parse(_botSettings.Schedule, new CrontabSchedule.ParseOptions { IncludingSeconds = true });

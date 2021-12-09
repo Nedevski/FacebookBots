@@ -1,4 +1,5 @@
 ﻿using CyanideAndHappinessBotWorker.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace CyanideAndHappinessBotWorker.Services;
 
@@ -8,11 +9,9 @@ public class FbUploader
     private ComicGenerator _generator;
     private BotSettings _botSettings;
 
-    public FbUploader(IConfiguration configuration)
+    public FbUploader(IOptions<BotSettings> botSettings)
     {
-        // Injecting IConfiguration directly to allow updating appsettings.json
-        // while the service is running
-        _botSettings = configuration.GetSection(nameof(BotSettings)).Get<BotSettings>();
+        _botSettings = botSettings.Value;
 
         _fb = new HttpClient();
         _fb.BaseAddress = new Uri("https://graph.facebook.com/");
