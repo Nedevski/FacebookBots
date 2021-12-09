@@ -4,16 +4,19 @@ using System.Drawing.Imaging;
 
 namespace CyanideAndHappinessBotWorker.Services;
 
-public class ComicGenerator
+public class ComicGeneratorService
 {
+    private BotSettings _botSettings;
     private HttpClient _client;
 
-    public ComicGenerator()
+    public ComicGeneratorService(IOptions<BotSettings> botSettings)
     {
+        _botSettings = botSettings.Value;
+
         _client = new HttpClient();
     }
 
-    public async Task<string> Create()
+    public async Task<Bitmap> Create()
     {
         var randomComicResponse = await _client.GetAsync("https://explosm.net/rcg");
 
@@ -33,7 +36,7 @@ public class ComicGenerator
             throw new ArgumentException("Unable to fetch comic images");
         }
 
-        List<Bitmap> images = new List<Bitmap>();
+        List<Bitmap> images = new();
 
         for (int i = 0; i < imageNodes.Count(); i++)
         {
@@ -45,20 +48,25 @@ public class ComicGenerator
         var height = images.First().Height;
         var width = images.First().Width;
 
-        using Bitmap comic = new Bitmap(width * 3, height);
-        using var canvas = Graphics.FromImage(comic);
+        Bitmap comic = new Bitmap(width * 3, height);
 
-        for (int i = 0; i < imageNodes.Count(); i++)
+        using var canvas = Graphics.FromImage(comic);
         {
-            canvas.DrawImage(images[i], width * i, 0);
+            for (int i = 0; i < imageNodes.Count(); i++)
+            {
+                canvas.DrawImage(images[i], width * i, 0);
+            }
+
+            canvas.Save();
         }
 
-        canvas.Save();
+        if (_botSettings.SaveGeneratedComics)
+        {
+            Directory.CreateDirectory("generated");
+            string imagePath = $"generated/{DateTime.UtcNow:yyyyMMdd-HHmmss}.jpg";
+            comic.Save(imagePath, ImageFormat.Jpeg);
+        }
 
-        Directory.CreateDirectory("generated");
-        string imagePath = $"generated/{DateTime.UtcNow:yyyyMMdd-HHmmss}.jpg";
-        comic.Save(imagePath, ImageFormat.Jpeg);
-
-        return imagePath;
+        return comic;
     }
 }

@@ -1,6 +1,3 @@
-using CyanideAndHappinessBotWorker.Configuration;
-using CyanideAndHappinessBotWorker.Services;
-using Microsoft.Extensions.Options;
 using NCrontab;
 
 namespace CyanideAndHappinessBotWorker;
@@ -13,9 +10,9 @@ public class Worker : BackgroundService
     private CrontabSchedule _schedule;
     private DateTime _nextRun;
 
-    private FbUploader _fbUploader;
+    private FacebookService _fbUploader;
 
-    public Worker(ILogger<Worker> logger, IOptions<BotSettings> botSettings, FbUploader fbUploader)
+    public Worker(ILogger<Worker> logger, IOptions<BotSettings> botSettings, FacebookService fbUploader)
     {
         _botSettings = botSettings.Value;
         _logger = logger;

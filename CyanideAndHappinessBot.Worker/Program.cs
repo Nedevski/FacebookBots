@@ -1,6 +1,8 @@
+global using CyanideAndHappinessBotWorker.Configuration;
+global using CyanideAndHappinessBotWorker.Services;
+global using Microsoft.Extensions.Options;
+
 using CyanideAndHappinessBotWorker;
-using CyanideAndHappinessBotWorker.Configuration;
-using CyanideAndHappinessBotWorker.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -9,8 +11,8 @@ var config = builder.Configuration;
 // Register services
 services.Configure<BotSettings>(config.GetSection(nameof(BotSettings)));
 
-services.AddTransient<ComicGenerator>();
-services.AddTransient<FbUploader>();
+services.AddTransient<ComicGeneratorService>();
+services.AddTransient<FacebookService>();
 
 services.AddHostedService<Worker>();
 

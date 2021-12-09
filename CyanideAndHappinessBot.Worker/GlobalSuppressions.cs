@@ -5,4 +5,5 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>", Scope = "member", Target = "~M:CyanideAndHappinessBotWorker.Services.ComicGenerator.Create~System.Threading.Tasks.Task{System.String}")]
+[assembly: SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>", Scope = "member", Target = "~M:CyanideAndHappinessBotWorker.Services.FacebookService.GenerateAndUpload~System.Threading.Tasks.Task{System.String}")]
+[assembly: SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>", Scope = "member", Target = "~M:CyanideAndHappinessBotWorker.Services.ComicGeneratorService.Create~System.Threading.Tasks.Task{System.Drawing.Bitmap}")]

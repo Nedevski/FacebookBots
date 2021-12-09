@@ -8,5 +8,7 @@ public class BotSettings
 
     public string Schedule { get; set; }
 
-    public int WorkerDelayInSeconds { get; set; }
+    public int WorkerDelayInSeconds { get; set; } = 5;
+
+    public bool SaveGeneratedComics { get; set; } = false;
 }
