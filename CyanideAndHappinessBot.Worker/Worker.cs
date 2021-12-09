@@ -1,3 +1,4 @@
+using CyanideAndHappinessBotWorker.Configuration;
 using CyanideAndHappinessBotWorker.Services;
 using NCrontab;
 
@@ -5,6 +6,7 @@ namespace CyanideAndHappinessBotWorker;
 
 public class Worker : BackgroundService
 {
+    private readonly BotSettings _botSettings;
     private readonly ILogger<Worker> _logger;
 
     private CrontabSchedule _schedule;
@@ -12,13 +14,14 @@ public class Worker : BackgroundService
 
     private FbUploader _fbUploader;
 
-    private string Schedule => "0 0 */6 * * *"; //Runs every 6 hours
-
-    public Worker(ILogger<Worker> logger, FbUploader fbUploader)
+    public Worker(ILogger<Worker> logger, IConfiguration configuration, FbUploader fbUploader)
     {
+        // Injecting IConfiguration directly to allow updating appsettings.json
+        // while the service is running
+        _botSettings = configuration.GetSection(nameof(BotSettings)).Get<BotSettings>();
         _logger = logger;
 
-        _schedule = CrontabSchedule.Parse(Schedule, new CrontabSchedule.ParseOptions { IncludingSeconds = true });
+        _schedule = CrontabSchedule.Parse(_botSettings.Schedule, new CrontabSchedule.ParseOptions { IncludingSeconds = true });
         _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
 
         _fbUploader = fbUploader;
@@ -28,24 +31,25 @@ public class Worker : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var now = DateTime.Now;
-            var nextrun = _schedule.GetNextOccurrence(now);
-            if (now > _nextRun)
+            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+
+            if (DateTime.Now > _nextRun)
             {
                 await ProcessAsync();
+
                 _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
             }
-            await Task.Delay(5000, stoppingToken); //5 seconds delay
 
-            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            await Task.Delay(1000, stoppingToken);
+            await Task.Delay(5000, stoppingToken); // 5 seconds delay
         }
     }
 
     private async Task ProcessAsync()
     {
-        Console.WriteLine("Generating comic...");
-        Console.WriteLine(await _fbUploader.GenerateAndUpload());
-        Console.WriteLine("Done!");
+        Console.WriteLine("Processing started");
+
+        var response = await _fbUploader.GenerateAndUpload();
+
+        Console.WriteLine(response);
     }
 }

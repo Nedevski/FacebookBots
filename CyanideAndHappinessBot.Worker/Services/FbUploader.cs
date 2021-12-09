@@ -10,6 +10,8 @@ public class FbUploader
 
     public FbUploader(IConfiguration configuration)
     {
+        // Injecting IConfiguration directly to allow updating appsettings.json
+        // while the service is running
         _botSettings = configuration.GetSection(nameof(BotSettings)).Get<BotSettings>();
 
         _fb = new HttpClient();
@@ -20,8 +22,6 @@ public class FbUploader
 
     public async Task<string> GenerateAndUpload()
     {
-        Console.WriteLine(_botSettings.PageId);
-
         // Create a comic
         var comicPath = await _generator.Create();
 
