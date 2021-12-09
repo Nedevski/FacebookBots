@@ -40,16 +40,16 @@ public class Worker : BackgroundService
                 _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
             }
 
-            await Task.Delay(5000, stoppingToken); // 5 seconds delay
+            await Task.Delay(_botSettings.WorkerDelayInSeconds * 1000, stoppingToken);
         }
     }
 
     private async Task ProcessAsync()
     {
-        Console.WriteLine("Processing started");
+        _logger.LogInformation("Processing started");
 
         var response = await _fbUploader.GenerateAndUpload();
 
-        Console.WriteLine(response);
+        _logger.LogInformation(response);
     }
 }

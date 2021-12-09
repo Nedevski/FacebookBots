@@ -7,4 +7,6 @@ internal class BotSettings
     public string PageToken { get; set; }
 
     public string Schedule { get; set; }
+
+    public int WorkerDelayInSeconds { get; set; }
 }

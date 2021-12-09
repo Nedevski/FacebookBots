@@ -1,14 +1,27 @@
 using CyanideAndHappinessBotWorker;
 using CyanideAndHappinessBotWorker.Services;
 
-IHost host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices(services =>
+var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
+
+// Register services
+services.AddTransient<ComicGenerator>();
+services.AddTransient<FbUploader>();
+
+services.AddHostedService<Worker>();
+
+// Register app dependencies
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseRouting();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapGet("/", async context =>
     {
-        services.AddTransient<ComicGenerator>();
-        services.AddTransient<FbUploader>();
+        await context.Response.WriteAsync("Service is running!");
+    });
+});
 
-        services.AddHostedService<Worker>();
-    })
-    .Build();
-
-await host.RunAsync();
+app.Run();
