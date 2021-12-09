@@ -31,7 +31,16 @@ public class Worker : BackgroundService
 
             if (DateTime.Now > _nextRun)
             {
-                await ProcessAsync();
+                try
+                {
+                    _logger.LogInformation("Processing started");
+                    
+                    await ProcessAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.Message);
+                }
 
                 _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
             }
@@ -42,8 +51,6 @@ public class Worker : BackgroundService
 
     private async Task ProcessAsync()
     {
-        _logger.LogInformation("Processing started");
-
         var response = await _fbUploader.GenerateAndUpload();
 
         _logger.LogInformation(response);
