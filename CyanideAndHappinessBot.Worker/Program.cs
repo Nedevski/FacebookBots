@@ -1,6 +1,12 @@
+global using Common;
+global using Common.Configuration;
+
 global using CyanideAndHappinessBotWorker.Configuration;
 global using CyanideAndHappinessBotWorker.Services;
+
 global using Microsoft.Extensions.Options;
+
+using Common.Services;
 
 using CyanideAndHappinessBotWorker;
 
@@ -9,6 +15,7 @@ var services = builder.Services;
 var config = builder.Configuration;
 
 // Register services
+services.Configure<BaseBotSettings>(config.GetSection(nameof(BaseBotSettings)));
 services.Configure<BotSettings>(config.GetSection(nameof(BotSettings)));
 
 services.AddTransient<ComicGeneratorService>();

@@ -1,15 +1,19 @@
+global using Common;
+global using Common.Configuration;
+global using Common.Services;
+
+global using Microsoft.Extensions.Options;
+
 using RandomPersonBotWorker;
-using RandomPersonBotWorker.Configuration;
-using RandomPersonBotWorker.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 var config = builder.Configuration;
 
 // Register services
-services.Configure<BotSettings>(config.GetSection(nameof(BotSettings)));
+services.Configure<BaseBotSettings>(config.GetSection(nameof(BaseBotSettings)));
 
-services.AddTransient<RandomPersonService>();
+services.AddTransient<FacebookService>();
 
 services.AddHostedService<Worker>();
 

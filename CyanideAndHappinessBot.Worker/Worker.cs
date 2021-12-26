@@ -1,57 +1,30 @@
-using NCrontab;
+using Common;
+using Common.Configuration;
+using Common.Services;
+
+using CyanideAndHappinessBotWorker.Services;
+
+using Microsoft.Extensions.Options;
 
 namespace CyanideAndHappinessBotWorker;
 
-public class Worker : BackgroundService
+public class Worker : BaseWorker
 {
-    private readonly BotSettings _botSettings;
-    private readonly ILogger<Worker> _logger;
+    private ComicGeneratorService _comicGenerator;
 
-    private CrontabSchedule _schedule;
-    private DateTime _nextRun;
-
-    private FacebookService _fbUploader;
-
-    public Worker(ILogger<Worker> logger, IOptions<BotSettings> botSettings, FacebookService fbUploader)
+    public Worker(
+        ILogger<Worker> logger,
+        IOptions<BaseBotSettings> baseBotSettings,
+        FacebookService fbService,
+        ComicGeneratorService comicGenerator) : base(logger, baseBotSettings, fbService)
     {
-        _botSettings = botSettings.Value;
-        _logger = logger;
-
-        _schedule = CrontabSchedule.Parse(_botSettings.Schedule, new CrontabSchedule.ParseOptions { IncludingSeconds = true });
-        _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
-
-        _fbUploader = fbUploader;
+        _comicGenerator = comicGenerator;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ProcessAsync()
     {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-
-            if (DateTime.Now > _nextRun)
-            {
-                try
-                {
-                    _logger.LogInformation("Processing started");
-                    
-                    await ProcessAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex.Message);
-                }
-
-                _nextRun = _schedule.GetNextOccurrence(DateTime.Now);
-            }
-
-            await Task.Delay(_botSettings.WorkerDelayInSeconds * 1000, stoppingToken);
-        }
-    }
-
-    private async Task ProcessAsync()
-    {
-        var response = await _fbUploader.GenerateAndUpload();
+        var comic = await _comicGenerator.GetNewComic();
+        var response = await _fbService.UploadImage(comic);
 
         _logger.LogInformation(response);
     }

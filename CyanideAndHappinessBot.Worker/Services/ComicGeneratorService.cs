@@ -1,4 +1,7 @@
-﻿using HtmlAgilityPack;
+﻿using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.UI;
+
 using System.Drawing;
 using System.Drawing.Imaging;
 
@@ -16,21 +19,30 @@ public class ComicGeneratorService
         _client = new HttpClient();
     }
 
-    public async Task<Bitmap> Create()
+    public async Task<Bitmap> GetNewComic()
     {
-        var randomComicResponse = await _client.GetAsync("https://explosm.net/rcg");
+        string imgXpath = "//div[contains(@class, 'Panel__Container')]/img";
 
-        var randomComicResult = await randomComicResponse.Content.ReadAsStringAsync();
-        var html = new HtmlDocument();
+        var driverOptions = new ChromeOptions();
+        driverOptions.AddArgument("headless");
 
-        html.LoadHtml(randomComicResult);
+        using WebDriver driver = new ChromeDriver(AppDomain.CurrentDomain.BaseDirectory, driverOptions);
 
-        var imageNodes = html.DocumentNode
-            .SelectNodes($"//div[@class='rcg-panels']/img")
-            .Select(node => node.Attributes.FirstOrDefault(a => a.Name == "src")?.Value)
+        driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+        driver.Navigate().GoToUrl("https://explosm.net/rcg");
+
+        WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
+
+        wait.Until(x => x.FindElement(By.XPath(imgXpath)));
+
+        var imageUrls = driver
+            .FindElements(By.XPath(imgXpath))
+            .Select(x => x.GetDomAttribute("src"))
             .ToArray();
 
-        if (imageNodes.Any(n => n is null) && imageNodes.Count() != 3)
+        driver.Close();
+
+        if (imageUrls.Any(n => n is null || n == string.Empty) || imageUrls.Count() != 3)
         {
             Console.WriteLine("Error");
             throw new ArgumentException("Unable to fetch comic images");
@@ -38,9 +50,9 @@ public class ComicGeneratorService
 
         List<Bitmap> images = new();
 
-        for (int i = 0; i < imageNodes.Count(); i++)
+        for (int i = 0; i < imageUrls.Count(); i++)
         {
-            var imgBytes = await _client.GetAsync(imageNodes[i]);
+            var imgBytes = await _client.GetAsync(imageUrls[i]);
             var imgStream = await imgBytes.Content.ReadAsStreamAsync();
             images.Add(new Bitmap(imgStream));
         }
@@ -52,7 +64,7 @@ public class ComicGeneratorService
 
         using var canvas = Graphics.FromImage(comic);
         {
-            for (int i = 0; i < imageNodes.Count(); i++)
+            for (int i = 0; i < imageUrls.Count(); i++)
             {
                 canvas.DrawImage(images[i], width * i, 0);
             }
